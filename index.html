@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HDKALA — فروشگاه (ویرایش عکس و تخفیف از داخل سایت)</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#d6336c' } },
+          fontFamily: { vazir: ['Vazirmatn', 'sans-serif'] }
+        }
+      },
+      darkMode: 'class'
+    }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+  <style>
+    body { font-family: 'Vazirmatn', sans-serif; }
+    .notification { position: fixed; right: 20px; bottom: 20px; padding: 12px 16px; border-radius: 10px;
+      background:#10b981;color:white; box-shadow:0 8px 24px rgba(0,0,0,.18); transform: translateY(12px); opacity:0; transition:all .22s ease; z-index:60;}
+    .notification.show{ opacity:1; transform: translateY(0); }
+    .notification.error{ background:#ef4444; }
+    .backdrop { background: rgba(0,0,0,0.45); position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .product-card:hover{ transform: translateY(-8px); box-shadow: 0 16px 32px rgba(0,0,0,.12); }
+    input[type="file"] { display: none; }
+    .img-preview { width:100%; height:200px; object-fit:cover; border-radius:8px; }
+    .badge { display: inline-block; padding: 0.25em 0.5em; font-size: 0.75em; font-weight: bold; border-radius: 9999px; }
+    .badge-discount { background-color: #ef4444; color: white; }
+    .badge-new { background-color: #3b82f6; color: white; }
+    .badge-hot { background-color: #f59e0b; color: white; }
+    /* small mobile fix for toast on top of fixed controls */
+    @media (max-width:640px) { .notification { right: 12px; left: 12px; } }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors">
+
+  <!-- Toast -->
+  <div id="notification" class="notification" role="status" aria-live="polite"></div>
+
+  <!-- Theme toggle -->
+  <button id="themeToggle" class="fixed top-4 left-4 z-50 p-3 rounded-full bg-primary text-white shadow-lg" aria-label="تغییر حالت">
+    <iconify-icon id="themeIcon" icon="ph:moon-duotone" width="20"></iconify-icon>
+  </button>
+
+  <div id="app" class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <a href="#" class="text-2xl font-extrabold text-primary flex items-center gap-2" id="homeLink">
+          <iconify-icon icon="mdi:cart" width="26"></iconify-icon> HDKALA
+        </a>
+        <div class="hidden md:flex items-center gap-4">
+          <a href="#products" class="text-gray-700 dark:text-gray-200 hover:text-primary">محصولات</a>
+          <a href="#about" class="text-gray-700 dark:text-gray-200 hover:text-primary">درباره ما</a>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="relative hidden md:block">
+          <input id="searchInput" type="search" placeholder="جستجو..." class="search-box py-2 pl-10 pr-4 rounded-full border border-gray-200 bg-white/80 dark:bg-gray-800/80 focus:outline-none focus:ring-2 focus:ring-primary" aria-label="جستجو">
+          <iconify-icon icon="mdi:magnify" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></iconify-icon>
+        </div>
+
+        <button id="adminBtn" class="text-sm bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg">پنل ادمین</button>
+
+        <button id="cartBtn" class="relative text-gray-700 dark:text-gray-200" aria-label="سبد خرید">
+          <iconify-icon icon="mdi:cart-outline" width="26"></iconify-icon>
+          <span id="cartCount" class="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hidden">0</span>
+        </button>
+
+        <button id="userButton" class="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+          <iconify-icon icon="mdi:user-circle-outline" width="26"></iconify-icon>
+          <span id="userLabel" class="hidden sm:inline">ورود / ثبت‌نام</span>
+        </button>
+
+        <button id="mobileMenuBtn" class="md:hidden text-gray-700 dark:text-gray-200">
+          <iconify-icon icon="mdi:menu" width="26"></iconify-icon>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="md:hidden hidden mb-4">
+      <div class="flex flex-col gap-3">
+        <a href="#products" class="block">محصولات</a>
+        <a href="#about" class="block">درباره ما</a>
+        <a href="#contact" class="block">تماس</a>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="bg-gradient-to-l from-primary to-purple-600 text-white rounded-2xl p-8 mb-8">
+      <div class="md:flex md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold mb-2">به HDKALA خوش آمدید</h1>
+          <p class="opacity-90">حالا می‌توانید تصاویر، تخفیف‌ها و دسته‌بندی‌های محصولات را از پنل ادمین مدیریت کنید.</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex gap-3">
+          <button id="exploreBtn" class="bg-white text-primary rounded-full px-4 py-2 font-medium">مشاهده محصولات</button>
+          <button id="quickAddDemo" class="bg-white/20 border border-white/30 rounded-full px-4 py-2">افزودن نمونه</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+      <div class="flex items-center gap-2">
+        <label for="sortSelect" class="text-sm text-gray-600">مرتب‌سازی:</label>
+        <select id="sortSelect" class="py-2 px-2 rounded-lg border border-gray-200">
+          <option value="popular">محبوب‌ترین</option>
+          <option value="price_asc">ارزان‌ترین</option>
+          <option value="price_desc">گران‌ترین</option>
+          <option value="discount">بیشترین تخفیف</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <label class="text-sm text-gray-600">فیلتر قیمت:</label>
+        <input id="minPrice" type="number" placeholder="حداقل" class="w-24 py-1 px-2 border rounded-lg" />
+        <input id="maxPrice" type="number" placeholder="حداکثر" class="w-24 py-1 px-2 border rounded-lg" />
+        
+        <label class="text-sm text-gray-600 mr-2">دسته‌بندی:</label>
+        <select id="categoryFilter" class="py-2 px-2 rounded-lg border border-gray-200">
+          <option value="">همه</option>
+          <option value="electronics">الکترونیک</option>
+          <option value="fashion">مد و پوشاک</option>
+          <option value="home">خانه و آشپزخانه</option>
+          <option value="books">کتاب</option>
+        </select>
+
+        <label class="text-sm text-gray-600 mr-2">تخفیف:</label>
+        <select id="discountFilter" class="py-2 px-2 rounded-lg border border-gray-200">
+          <option value="">همه</option>
+          <option value="has_discount">دارای تخفیف</option>
+          <option value="no_discount">بدون تخفیف</option>
+        </select>
+
+        <button id="applyFilter" class="bg-primary text-white px-3 py-1 rounded-lg">اعمال</button>
+        <button id="clearFilter" class="px-3 py-1 border rounded-lg">پاک‌سازی</button>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <main id="products" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" aria-live="polite"></main>
+
+    <footer class="mt-10 py-6 text-center text-gray-600 dark:text-gray-300">
+      © 2025 HDKALA — مدیریت تصاویر و تخفیف از داخل سایت (Local)
+    </footer>
+  </div>
+
+  <!-- SCRIPT: all logic -->
+  <script>
+  (function(){
+    /* ---------- helpers ---------- */
+    const $ = (s, ctx=document) => ctx.querySelector(s);
+    const $$ = (s, ctx=document) => Array.from((ctx||document).querySelectorAll(s));
+    const notifyEl = document.getElementById('notification');
+    function notify(msg, isError=false){
+      notifyEl.textContent = msg;
+      notifyEl.classList.toggle('error', isError);
+      notifyEl.classList.add('show');
+      clearTimeout(notifyEl._t);
+      notifyEl._t = setTimeout(()=> notifyEl.classList.remove('show'), 3500);
+    }
+    function uid(prefix='id'){ return prefix + Math.random().toString(36).slice(2,9); }
+
+    /* ---------- LocalStorage wrapper ---------- */
+    const LS = {
+      get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+      set(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+    };
+
+    /* ---------- Initial bootstrap data (با فیلد تخفیف و دسته‌بندی جدید) ---------- */
+    if(!LS.get('HDK_products')) {
+      LS.set('HDK_products', [
+        { id: 'p1', name: 'هدفون بی‌سیم', price: 990000, desc:'هدفون راحت و با کیفیت', img:'https://picsum.photos/seed/h1/600/400', rating:4, discount: 15, category: 'electronics', status: 'new' },
+        { id: 'p2', name: 'گوشی هوشمند', price: 2500000, desc:'گوشی قدرتمند با دوربین عالی', img:'https://picsum.photos/seed/h2/600/400', rating:5, discount: 0, category: 'electronics', status: 'hot' },
+        { id: 'p3', name: 'لپ‌تاپ سبک', price: 18000000, desc:'لپ‌تاپ مناسب کار و بازی', img:'https://picsum.photos/seed/h3/600/400', rating:5, discount: 10, category: 'electronics', status: '' }
+      ]);
+    }
+    if(!LS.get('HDK_cart')) LS.set('HDK_cart', []);
+    if(!LS.get('HDK_orders')) LS.set('HDK_orders', []);
+    if(!LS.get('HDK_user')) LS.set('HDK_user', null);
+
+    /* ---------- State ---------- */
+    let products = LS.get('HDK_products', []);
+    let cart = LS.get('HDK_cart', []);
+    let orders = LS.get('HDK_orders', []);
+    let user = LS.get('HDK_user', null);
+
+    /* ---------- DOM refs ---------- */
+    const productsRoot = $('#products');
+    const cartCountEl = $('#cartCount');
+    const userLabel = $('#userLabel');
+    const adminBtn = $('#adminBtn');
+    const mobileMenuBtn = $('#mobileMenuBtn');
+    const mobileMenu = $('#mobileMenu');
+    const searchInput = $('#searchInput');
+    const sortSelect = $('#sortSelect');
+    const minPrice = $('#minPrice');
+    const maxPrice = $('#maxPrice');
+    const categoryFilter = $('#categoryFilter'); // جدید
+    const discountFilter = $('#discountFilter'); // جدید
+    const applyFilter = $('#applyFilter');
+    const clearFilter = $('#clearFilter');
+    const exploreBtn = $('#exploreBtn');
+    const quickAddDemo = $('#quickAddDemo');
+    const themeToggle = $('#themeToggle');
+    const themeIcon = $('#themeIcon');
+    const root = document.documentElement;
+
+    /* ---------- utils ---------- */
+    function formatPrice(n){ return n.toLocaleString('fa-IR') + ' تومان'; }
+    function updateCartBadge(){ if(cart.length===0) cartCountEl.classList.add('hidden'); else { cartCountEl.classList.remove('hidden'); cartCountEl.textContent = String(cart.reduce((s,i)=>s+i.qty,0)); } }
+    function updateUserLabel(){ userLabel.textContent = (user && user.name) ? user.name : 'ورود / ثبت‌نام'; }
+
+    /* ---------- Render products (با نمایش تخفیف و برچسب) ---------- */
+    function renderProducts(list){
+      productsRoot.innerHTML = '';
+      if(!list || list.length===0){ productsRoot.innerHTML = '<div class="col-span-full text-center text-gray-500">محصولی یافت نشد</div>'; return; }
+      list.forEach(p=>{
+        // محاسبه قیمت با تخفیف
+        const finalPrice = p.discount > 0 ? p.price * (1 - p.discount / 100) : p.price;
+        const hasDiscount = p.discount > 0;
+
+        const article = document.createElement('article');
+        article.className = 'product-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-transform';
+        article.innerHTML = `
+          <div class="relative overflow-hidden">
+            <img src="${p.img}" alt="${p.name}" class="w-full h-48 object-cover product-image img-preview" loading="lazy" />
+            <button aria-label="افزودن به علاقه‌مندی‌ها" data-id="${p.id}" class="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/80 rounded-full p-2">
+              <iconify-icon icon="mdi:heart-outline"></iconify-icon>
+            </button>
+            <!-- برچسب تخفیف -->
+            ${hasDiscount ? `<div class="absolute top-2 left-2 badge badge-discount">${p.discount}% تخفیف</div>` : ''}
+            <!-- برچسب وضعیت -->
+            ${p.status === 'new' ? `<div class="absolute top-2 left-2 mt-8 badge badge-new">جدید</div>` : ''}
+            ${p.status === 'hot' ? `<div class="absolute top-2 left-2 mt-8 badge badge-hot">فروش ویژه</div>` : ''}
+          </div>
+          <div class="p-4">
+            <h3 class="font-bold text-lg mb-1 dark:text-white">${p.name}</h3>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">${p.desc}</p>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                ${hasDiscount ? `<div class="text-gray-500 line-through text-sm">${formatPrice(p.price)}</div>` : ''}
+                <span class="text-primary font-extrabold">${formatPrice(finalPrice)}</span>
+              </div>
+              <div class="text-gray-500 text-sm">امتیاز: ${'★'.repeat(p.rating||4)}</div>
+            </div>
+            <div class="flex gap-2">
+              <button class="add-to-cart flex-1 bg-primary hover:opacity-90 text-white py-2 rounded-full font-semibold" data-id="${p.id}">افزودن به سبد</button>
+              <button class="view-detail w-12 bg-white/60 dark:bg-gray-700/60 rounded-full" data-id="${p.id}" aria-label="جزئیات"><iconify-icon icon="mdi:eye" width="18"></iconify-icon></button>
+            </div>
+          </div>
+        `;
+        productsRoot.appendChild(article);
+      });
+    }
+
+    function refreshAll(){
+      products = LS.get('HDK_products', []); cart = LS.get('HDK_cart', []); orders = LS.get('HDK_orders', []); user = LS.get('HDK_user', null);
+      renderProducts(products); updateCartBadge(); updateUserLabel();
+    }
+    refreshAll();
+
+    /* ---------- Product interactions (delegation) ---------- */
+    productsRoot.addEventListener('click', (e) => {
+      const addBtn = e.target.closest('.add-to-cart');
+      if(addBtn){ addToCart(addBtn.getAttribute('data-id'), 1); return; }
+      const viewBtn = e.target.closest('.view-detail');
+      if(viewBtn){ openProductDetail(viewBtn.getAttribute('data-id')); return; }
+      const favBtn = e.target.closest('[aria-label="افزودن به علاقه‌مندی‌ها"]');
+      if(favBtn){ const p = products.find(x=>x.id===favBtn.getAttribute('data-id')); notify(`"${p.name}" به علاقه‌مندی‌ها اضافه شد.`); return; }
+    });
+
+    /* ---------- Cart functions (با محاسبه قیمت نهایی با تخفیف) ---------- */
+    function addToCart(productId, qty=1){
+      const existing = cart.find(i=>i.productId===productId);
+      if(existing) existing.qty += qty; else cart.push({ productId, qty });
+      LS.set('HDK_cart', cart); updateCartBadge(); notify('محصول به سبد اضافه شد.');
+    }
+
+    function openCartModal(){
+      const modal = createModal();
+      const content = document.createElement('div'); content.className='bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-2xl';
+      content.innerHTML = `<h3 class="text-lg font-bold mb-3">سبد خرید شما</h3>`;
+      if(cart.length===0){ content.innerHTML += `<p class="text-gray-500">سبد خرید خالی است.</p>`; modal.appendChild(content); document.body.appendChild(modal); return; }
+
+      const list = document.createElement('div'); list.className='space-y-3 mb-4';
+      cart.forEach(item=>{
+        const prod = products.find(p=>p.id===item.productId);
+        // محاسبه قیمت نهایی با تخفیف برای نمایش در سبد
+        const finalPrice = prod.discount > 0 ? prod.price * (1 - prod.discount / 100) : prod.price;
+        const row = document.createElement('div'); row.className='flex items-center gap-3';
+        row.innerHTML = `
+          <img src="${prod.img}" class="w-16 h-12 object-cover rounded" alt="${prod.name}" />
+          <div class="flex-1">
+            <div class="font-medium">${prod.name}</div>
+            <div class="text-sm text-gray-500">
+              ${prod.discount > 0 ? `<span class="line-through">${formatPrice(prod.price)}</span> ` : ''}
+              ${formatPrice(finalPrice)}
+            </div>
+          </div>
+          <div class="flex items-center gap-1 text-sm">
+            <button class="qty-minus px-2 py-1 border rounded" data-id="${prod.id}">-</button>
+            <span class="px-2">${item.qty}</span>
+            <button class="qty-plus px-2 py-1 border rounded" data-id="${prod.id}">+</button>
+          </div>
+          <button class="remove-item text-sm text-red-500 ml-2" data-id="${prod.id}">حذف</button>
+        `;
+        list.appendChild(row);
+      });
+      content.appendChild(list);
+      // محاسبه جمع کل با تخفیف
+      const subtotal = cart.reduce((s,i)=> {
+        const prod = products.find(p=>p.id===i.productId);
+        const finalPrice = prod.discount > 0 ? prod.price * (1 - prod.discount / 100) : prod.price;
+        return s + (finalPrice * i.qty);
+      }, 0);
+      const footer = document.createElement('div');
+      footer.innerHTML = `<div class="flex items-center justify-between font-bold mb-3">جمع: <span>${formatPrice(subtotal)}</span></div>
+        <div class="flex gap-2"><button id="proceedCheckout" class="bg-primary text-white px-4 py-2 rounded">ادامه به پرداخت</button><button id="closeCart" class="px-4 py-2 border rounded">بستن</button></div>`;
+      content.appendChild(footer);
+      modal.appendChild(content); document.body.appendChild(modal);
+
+      list.addEventListener('click', (e)=>{
+        if(e.target.matches('.qty-plus')){ const id=e.target.getAttribute('data-id'); const it=cart.find(x=>x.productId===id); it.qty++; LS.set('HDK_cart', cart); modal.remove(); openCartModal(); updateCartBadge(); }
+        if(e.target.matches('.qty-minus')){ const id=e.target.getAttribute('data-id'); const it=cart.find(x=>x.productId===id); if(it.qty>1) it.qty--; else cart = cart.filter(x=>x.productId!==id); LS.set('HDK_cart', cart); modal.remove(); openCartModal(); updateCartBadge(); }
+        if(e.target.matches('.remove-item')){ const id=e.target.getAttribute('data-id'); cart = cart.filter(x=>x.productId!==id); LS.set('HDK_cart', cart); modal.remove(); openCartModal(); updateCartBadge(); }
+      });
+
+      footer.querySelector('#proceedCheckout').addEventListener('click', ()=>{ modal.remove(); openCheckoutModal(); });
+      footer.querySelector('#closeCart').addEventListener('click', ()=> modal.remove());
+    }
+
+    /* ---------- Product detail (با نمایش تخفیف) ---------- */
+    function openProductDetail(id){
+      const p = products.find(x=>x.id===id);
+      const finalPrice = p.discount > 0 ? p.price * (1 - p.discount / 100) : p.price;
+      const hasDiscount = p.discount > 0;
+
+      const modal = createModal();
+      const content = document.createElement('div'); content.className='bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-2xl';
+      content.innerHTML = `
+        <div class="flex gap-4">
+          <img src="${p.img}" alt="${p.name}" class="w-48 h-36 object-cover rounded" />
+          <div class="flex-1">
+            <h3 class="text-xl font-bold mb-2">${p.name}</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-3">${p.desc}</p>
+            <div class="mb-3">
+              ${hasDiscount ? `<div class="text-gray-500 line-through text-sm">${formatPrice(p.price)}</div>` : ''}
+              <div class="text-primary font-extrabold">${formatPrice(finalPrice)}</div>
+              ${hasDiscount ? `<div class="text-green-600 font-medium">${p.discount}% تخفیف</div>` : ''}
+            </div>
+            <div class="flex gap-2">
+              <button id="addThis" class="bg-primary text-white px-4 py-2 rounded">افزودن به سبد</button>
+              <button id="closeDtl" class="px-4 py-2 border rounded">بستن</button>
+            </div>
+          </div>
+        </div>`;
+      modal.appendChild(content); document.body.appendChild(modal);
+      content.querySelector('#addThis').addEventListener('click', ()=>{ addToCart(id,1); modal.remove(); });
+      content.querySelector('#closeDtl').addEventListener('click', ()=> modal.remove());
+    }
+
+    /* ---------- Checkout (با محاسبه قیمت نهایی با تخفیف) ---------- */
+    function openCheckoutModal(){
+      if(cart.length===0){ notify('سبد خرید خالی است', true); return; }
+      const modal = createModal();
+      // محاسبه جمع کل با تخفیف برای صفحه پرداخت
+      const subtotal = cart.reduce((s,i)=> {
+        const prod = products.find(p=>p.id===i.productId);
+        const finalPrice = prod.discount > 0 ? prod.price * (1 - prod.discount / 100) : prod.price;
+        return s + (finalPrice * i.qty);
+      }, 0);
+      const content = document.createElement('div'); content.className='bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-2xl';
+      content.innerHTML = `
+        <h3 class="text-lg font-bold mb-3">صفحه پرداخت</h3>
+        <div class="mb-3"><label class="block text-sm mb-1">نام گیرنده</label><input id="coName" class="w-full border rounded px-3 py-2" value="${user ? user.name : ''}" /></div>
+        <div class="mb-3"><label class="block text-sm mb-1">آدرس تحویل</label><input id="coAddr" class="w-full border rounded px-3 py-2" placeholder="آدرس شما" /></div>
+        <div class="mb-3"><label class="block text-sm mb-1">روش پرداخت</label><select id="coMethod" class="w-full border rounded px-3 py-2"><option value="gateway">درگاه (شبیه‌سازی)</option><option value="cod">پرداخت در محل</option></select></div>
+        <div class="mb-3 font-bold">جمع کل: ${formatPrice(subtotal)}</div>
+        <div class="flex gap-2"><button id="payBtn" class="bg-primary text-white px-4 py-2 rounded">پرداخت / ثبت سفارش</button><button id="closeChk" class="px-4 py-2 border rounded">انصراف</button></div>
+      `;
+      modal.appendChild(content); document.body.appendChild(modal);
+      content.querySelector('#closeChk').addEventListener('click', ()=> modal.remove());
+      content.querySelector('#payBtn').addEventListener('click', ()=>{
+        const name = content.querySelector('#coName').value.trim(); const addr = content.querySelector('#coAddr').value.trim();
+        if(!name || !addr){ notify('لطفا نام و آدرس را وارد کنید', true); return; }
+        const order = { id: uid('ord'), items: cart.slice(), total: subtotal, name, addr, method: content.querySelector('#coMethod').value, created: new Date().toISOString() };
+        orders.push(order); LS.set('HDK_orders', orders);
+        cart = []; LS.set('HDK_cart', cart); updateCartBadge();
+        modal.remove(); notify('سفارش ثبت شد — شماره: ' + order.id);
+      });
+    }
+
+    /* ---------- Modal helper ---------- */
+    function createModal(){ const root = document.createElement('div'); root.className='backdrop'; root.addEventListener('click', (e)=>{ if(e.target===root) root.remove(); }); return root; }
+
+    /* ---------- Admin panel (با مدیریت تخفیف و دسته‌بندی) ---------- */
+    function openAdminPanel(){
+      const modal = createModal();
+      const content = document.createElement('div'); content.className='bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-3xl overflow-auto max-h-[80vh]';
+      content.innerHTML = `
+        <h3 class="text-lg font-bold mb-3">پنل مدیریت</h3>
+        <div class="mb-4 flex gap-2"><button id="newProd" class="bg-primary text-white px-3 py-2 rounded">افزودن محصول جدید</button><button id="refreshList" class="px-3 py-2 border rounded">بارگذاری دوباره</button><button id="closeAdmin" class="px-3 py-2 border rounded">بستن</button></div>
+        <div id="adminList" class="space-y-3"></div>
+        <hr class="my-3" />
+        <h4 class="font-bold mb-2">سفارش‌ها</h4>
+        <div id="ordersList" class="space-y-3"></div>
+      `;
+      modal.appendChild(content); document.body.appendChild(modal);
+
+      function renderAdminList(){
+        const listRoot = content.querySelector('#adminList'); listRoot.innerHTML = '';
+        products.forEach(p=>{
+          const finalPrice = p.discount > 0 ? p.price * (1 - p.discount / 100) : p.price;
+          const el = document.createElement('div'); el.className='flex items-center gap-3 p-2 border rounded';
+          el.innerHTML = `
+            <img src="${p.img}" class="w-20 h-16 object-cover rounded" />
+            <div class="flex-1">
+              <div class="font-semibold">${p.name}</div>
+              <div class="text-sm text-gray-500">
+                ${p.discount > 0 ? `<span class="line-through">${formatPrice(p.price)}</span> ` : ''}
+                ${formatPrice(finalPrice)} (${p.category || '---'})
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button class="edit-prod px-3 py-1 border rounded" data-id="${p.id}">ویرایش</button>
+              <button class="del-prod px-3 py-1 border rounded text-red-500" data-id="${p.id}">حذف</button>
+            </div>`;
+          listRoot.appendChild(el);
+        });
+      }
+
+      function renderOrders(){
+        const ol = content.querySelector('#ordersList'); ol.innerHTML = '';
+        orders.slice().reverse().forEach(o=>{
+          const el = document.createElement('div'); el.className='p-3 border rounded';
+          el.innerHTML = `<div class="flex justify-between items-center"><div><strong>${o.id}</strong> — ${new Date(o.created).toLocaleString('fa-IR')}</div><div class="text-sm">${formatPrice(o.total)}</div></div>
+                          <div class="text-xs mt-2 text-gray-600">${o.name} — ${o.addr}</div>`;
+          ol.appendChild(el);
+        });
+        if(orders.length===0) ol.innerHTML = '<div class="text-gray-500">سفارشی ثبت نشده</div>';
+      }
+
+      renderAdminList(); renderOrders();
+      content.querySelector('#closeAdmin').addEventListener('click', ()=> modal.remove());
+      content.querySelector('#newProd').addEventListener('click', ()=> openProductEditor(null, ()=>{ renderAdminList(); refreshAll(); }));
+      content.querySelector('#refreshList').addEventListener('click', ()=> { products = LS.get('HDK_products'); renderAdminList(); });
+
+      content.querySelector('#adminList').addEventListener('click', (e)=>{
+        if(e.target.matches('.edit-prod')){ const id=e.target.getAttribute('data-id'); openProductEditor(products.find(x=>x.id===id), ()=>{ renderAdminList(); refreshAll(); }); }
+        if(e.target.matches('.del-prod')){ const id=e.target.getAttribute('data-id'); if(confirm('آیا مطمئن هستید؟')){ products = products.filter(x=>x.id!==id); LS.set('HDK_products', products); renderAdminList(); refreshAll(); notify('محصول حذف شد.'); } }
+      });
+    }
+
+    /* ---------- Product editor with file upload AND discount/category (ویرایشگر محصول با تخفیف و دسته‌بندی) ---------- */
+    function openProductEditor(product, onSave){
+      const modal = createModal();
+      const content = document.createElement('div'); content.className='bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-xl';
+      const p = product || { 
+        id: uid('p'), 
+        name:'', 
+        price:0, 
+        desc:'', 
+        img:'https://picsum.photos/seed/' + Math.random().toString(36).slice(2,6) + '/600/400', 
+        rating:4,
+        discount: 0, // فیلد جدید: تخفیف
+        category: '', // فیلد جدید: دسته‌بندی
+        status: '' // فیلد جدید: وضعیت (new, hot)
+      };
+      content.innerHTML = `
+        <h3 class="text-lg font-bold mb-3">${product ? 'ویرایش' : 'افزودن'} محصول</h3>
+        <div class="space-y-3">
+          <div><label class="text-sm">نام</label><input id="epName" class="w-full border rounded px-3 py-2" value="${p.name}"></div>
+          <div><label class="text-sm">قیمت (تومان)</label><input id="epPrice" type="number" class="w-full border rounded px-3 py-2" value="${p.price}"></div>
+          <div><label class="text-sm">درصد تخفیف</label><input id="epDiscount" type="number" min="0" max="100" class="w-full border rounded px-3 py-2" value="${p.discount}" placeholder="0"></div>
+          <div><label class="text-sm">دسته‌بندی</label>
+            <select id="epCategory" class="w-full border rounded px-3 py-2">
+              <option value="">بدون دسته‌بندی</option>
+              <option value="electronics" ${p.category === 'electronics' ? 'selected' : ''}>الکترونیک</option>
+              <option value="fashion" ${p.category === 'fashion' ? 'selected' : ''}>مد و پوشاک</option>
+              <option value="home" ${p.category === 'home' ? 'selected' : ''}>خانه و آشپزخانه</option>
+              <option value="books" ${p.category === 'books' ? 'selected' : ''}>کتاب</option>
+            </select>
+          </div>
+          <div><label class="text-sm">وضعیت</label>
+            <select id="epStatus" class="w-full border rounded px-3 py-2">
+              <option value="" ${p.status === '' ? 'selected' : ''}>بدون برچسب</option>
+              <option value="new" ${p.status === 'new' ? 'selected' : ''}>جدید</option>
+              <option value="hot" ${p.status === 'hot' ? 'selected' : ''}>فروش ویژه</option>
+            </select>
+          </div>
+          <div><label class="text-sm">توضیح کوتاه</label><input id="epDesc" class="w-full border rounded px-3 py-2" value="${p.desc}"></div>
+          <div>
+            <label class="text-sm mb-1 block">پیش‌نمایش تصویر</label>
+            <img id="epPreview" src="${p.img}" class="img-preview mb-2" alt="preview" />
+            <div class="flex items-center gap-2">
+              <label class="inline-flex items-center gap-2 cursor-pointer bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded">
+                <input type="file" id="epFile" accept="image/*" />
+                <span class="text-sm">بارگذاری عکس جدید</span>
+              </label>
+              <button id="resetImg" class="px-3 py-2 border rounded">بازگشت به پیش‌فرض</button>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">عکس انتخاب‌شده در localStorage ذخیره می‌شود (Data URL).</p>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <button id="saveProd" class="bg-primary text-white px-4 py-2 rounded">ذخیره</button>
+            <button id="cancelProd" class="px-4 py-2 border rounded">لغو</button>
+          </div>
+        </div>
+      `;
+      modal.appendChild(content); document.body.appendChild(modal);
+
+      const fileInput = content.querySelector('#epFile');
+      const preview = content.querySelector('#epPreview');
+      const nameInput = content.querySelector('#epName');
+      const priceInput = content.querySelector('#epPrice');
+      const discountInput = content.querySelector('#epDiscount'); // جدید
+      const categorySelect = content.querySelector('#epCategory'); // جدید
+      const statusSelect = content.querySelector('#epStatus'); // جدید
+      const descInput = content.querySelector('#epDesc');
+
+      // pendingDataUrl holds uploaded image until save
+      let pendingDataUrl = null;
+
+      // File upload -> FileReader -> DataURL
+      fileInput.addEventListener('change', (ev) => {
+        const f = ev.target.files && ev.target.files[0];
+        if(!f) return;
+        if(!f.type.startsWith('image/')) { notify('لطفا یک فایل تصویر انتخاب کنید', true); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+          pendingDataUrl = reader.result; // Data URL
+          preview.src = pendingDataUrl;
+          notify('پیش‌نمایش تصویر آماده است — برای ذخیره، دکمه ذخیره را بزنید.');
+        };
+        reader.readAsDataURL(f);
+      });
+
+      // Reset image -> to original
+      content.querySelector('#resetImg').addEventListener('click', () => {
+        pendingDataUrl = null;
+        preview.src = product ? product.img : 'https://picsum.photos/seed/' + Math.random().toString(36).slice(2,6) + '/600/400';
+        notify('تصویر به پیش‌فرض برگشت.');
+      });
+
+      // Save product (with pendingDataUrl if available)
+      content.querySelector('#saveProd').addEventListener('click', () => {
+        const name = nameInput.value.trim(); 
+        const price = Number(priceInput.value||0); 
+        const discount = Number(discountInput.value||0); // جدید
+        const category = categorySelect.value; // جدید
+        const status = statusSelect.value; // جدید
+        const desc = descInput.value.trim();
+        if(!name || !price){ notify('نام و قیمت را صحیح وارد کنید', true); return; }
+        if(discount < 0 || discount > 100) { notify('درصد تخفیف باید بین 0 تا 100 باشد', true); return; }
+        const entry = { 
+          id: p.id, 
+          name, 
+          price, 
+          desc, 
+          img: pendingDataUrl ? pendingDataUrl : preview.src, 
+          rating: p.rating || 4,
+          discount, // ذخیره تخفیف
+          category, // ذخیره دسته‌بندی
+          status // ذخیره وضعیت
+        };
+        const idx = products.findIndex(x=>x.id===p.id);
+        if(idx>=0) products[idx] = entry; else products.push(entry);
+        LS.set('HDK_products', products);
+        modal.remove(); if(onSave) onSave(); notify('محصول ذخیره شد. (عکس در localStorage)'); refreshAll();
+      });
+
+      content.querySelector('#cancelProd').addEventListener('click', ()=> modal.remove());
+    }
+
+    /* ---------- Quick add demo (با تخفیف و دسته‌بندی تصادفی) ---------- */
+    quickAddDemo.addEventListener('click', ()=> {
+      const categories = ['', 'electronics', 'fashion', 'home', 'books'];
+      const statuses = ['', 'new', 'hot'];
+      const newP = { 
+        id: uid('p'), 
+        name: 'کالای جدید نمونه', 
+        price: Math.floor(Math.random()*5000000)+100000, 
+        desc:'توضیحات نمونه', 
+        img:'https://picsum.photos/seed/' + Math.random().toString(36).slice(2,6) + '/600/400', 
+        rating: Math.ceil(Math.random()*5),
+        discount: Math.floor(Math.random() * 30), // تخفیف تصادفی 0 تا 29%
+        category: categories[Math.floor(Math.random() * categories.length)],
+        status: statuses[Math.floor(Math.random() * statuses.length)]
+      };
+      products.push(newP); LS.set('HDK_products', products); renderProducts(products); notify('محصول نمونه اضافه شد.');
+    });
+
+    /* ---------- Filters / Search / Sort (با فیلتر تخفیف و دسته‌بندی) ---------- */
+    function applyFilters(){
+      let list = products.slice();
+      const q = searchInput.value.trim().toLowerCase();
+      if(q) list = list.filter(p => p.name.toLowerCase().includes(q) || (p.desc||'').toLowerCase().includes(q));
+      const mn = Number(minPrice.value||0), mx = Number(maxPrice.value||0);
+      if(mn>0) list = list.filter(p => p.price >= mn);
+      if(mx>0) list = list.filter(p => p.price <= mx);
+      
+      // فیلتر دسته‌بندی
+      const cat = categoryFilter.value;
+      if(cat) list = list.filter(p => p.category === cat);
+      
+      // فیلتر تخفیف
+      const disc = discountFilter.value;
+      if(disc === 'has_discount') list = list.filter(p => p.discount > 0);
+      if(disc === 'no_discount') list = list.filter(p => p.discount === 0);
+
+      const sort = sortSelect.value;
+      if(sort==='price_asc') list.sort((a,b)=>a.price-b.price);
+      else if(sort==='price_desc') list.sort((a,b)=>b.price-a.price);
+      else if(sort==='discount') list.sort((a,b)=>b.discount - a.discount); // مرتب‌سازی بر اساس تخفیف
+      else list.sort((a,b)=> (b.rating||0) - (a.rating||0)); // popular
+      renderProducts(list);
+    }
+    searchInput.addEventListener('input', applyFilters);
+    sortSelect.addEventListener('change', applyFilters);
+    applyFilter.addEventListener('click', applyFilters);
+    clearFilter.addEventListener('click', ()=> { 
+      minPrice.value=''; 
+      maxPrice.value=''; 
+      categoryFilter.value = ''; // پاک‌سازی
+      discountFilter.value = ''; // پاک‌سازی
+      applyFilters(); 
+    });
+
+    /* ---------- UI buttons ---------- */
+    $('#cartBtn').addEventListener('click', openCartModal);
+    $('#adminBtn').addEventListener('click', openAdminPanel);
+    mobileMenuBtn.addEventListener('click', ()=> mobileMenu.classList.toggle('hidden'));
+    $('#exploreBtn').addEventListener('click', ()=> { document.querySelector('#products').scrollIntoView({behavior:'smooth'}); });
+    $('#userButton').addEventListener('click', openAuthModal);
+
+    /* ---------- Auth modal (simple local) ---------- */
+    function openAuthModal(){
+      const modal = createModal();
+      const content = document.createElement('div'); content.className='bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-md';
+      content.innerHTML = `
+        <h3 class="text-lg font-bold mb-3">ورود / ثبت‌نام (شبیه‌سازی)</h3>
+        <div class="mb-2"><label class="text-sm">نام</label><input id="uName" class="w-full border rounded px-3 py-2" placeholder="نام شما" value="${user ? user.name : ''}" /></div>
+        <div class="mb-2"><label class="text-sm">شماره یا ایمیل</label><input id="uContact" class="w-full border rounded px-3 py-2" value="${user ? user.contact : ''}" /></div>
+        <div class="flex gap-2 mt-3"><button id="saveUser" class="bg-primary text-white px-4 py-2 rounded">ذخیره و ورود</button><button id="logoutUser" class="px-4 py-2 border rounded">${user ? 'خروج' : 'انصراف'}</button></div>`;
+      modal.appendChild(content); document.body.appendChild(modal);
+
+      content.querySelector('#saveUser').addEventListener('click', ()=> {
+        const name = content.querySelector('#uName').value.trim(); const contact = content.querySelector('#uContact').value.trim();
+        if(!name || !contact){ notify('نام و تماس را وارد کنید', true); return; }
+        user = { id: uid('u'), name, contact, created: new Date().toISOString() };
+        LS.set('HDK_user', user); updateUserLabel(); modal.remove(); notify('با موفقیت وارد شدید.');
+      });
+      content.querySelector('#logoutUser').addEventListener('click', ()=> {
+        if(user){ if(confirm('آیا از خروج مطمئن هستید؟')){ LS.set('HDK_user', null); user=null; updateUserLabel(); notify('خروج انجام شد'); modal.remove(); } } else modal.remove();
+      });
+    }
+
+    /* ---------- Theme toggle (persist) ---------- */
+    if(localStorage.getItem('hdk_dark') === 'true'){ root.classList.add('dark'); themeIcon.setAttribute('icon','ph:sun-duotone'); } else themeIcon.setAttribute('icon','ph:moon-duotone');
+    themeToggle.addEventListener('click', ()=> { root.classList.toggle('dark'); const isDark = root.classList.contains('dark'); localStorage.setItem('hdk_dark', String(isDark)); themeIcon.setAttribute('icon', isDark ? 'ph:sun-duotone' : 'ph:moon-duotone'); });
+
+    /* ---------- keyboard shortcuts (dev) ---------- */
+    window.addEventListener('keydown', (e)=> { if(e.key==='c') openCartModal(); if(e.key==='a') openAdminPanel(); });
+
+    /* ---------- initial render ---------- */
+    applyFilters();
+    updateCartBadge(); updateUserLabel();
+
+  })();
+  </script>
+</body>
+</html>
